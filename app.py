@@ -4,8 +4,8 @@ import joblib
 from sklearn.preprocessing import StandardScaler
 
 # Load the pre-trained model and scaler
-model = joblib.load('path_to_your_best_rf_model.pkl')
-scaler = joblib.load('path_to_your_scaler.pkl')
+model = joblib.load('best_rf_model.pkl')
+scaler = joblib.load('scaler.pkl')
 
 # Create the app's UI
 st.title('Car Selling Price Prediction')
@@ -28,12 +28,20 @@ input_data = pd.DataFrame({
     'seller_type': [seller_type],
 })
 
-# Preprocess input data (one-hot encoding, scaling, etc.)
-input_data = pd.get_dummies(input_data)  # Assuming you need one-hot encoding for categorical features
-input_data_scaled = scaler.transform(input_data)
+# Apply one-hot encoding on the input features
+input_data_encoded = pd.get_dummies(input_data)
 
-# Make prediction
-prediction = model.predict(input_data_scaled)
+# Align the columns with the training data's columns
+model_columns = joblib.load('model_columns.pkl')  # This should be saved during training with column names
+input_data_encoded = input_data_encoded.reindex(columns=model_columns, fill_value=0)
 
-# Show the prediction
-st.write(f"Predicted Selling Price: ₹{prediction[0]:,.2f}")
+# Add a button to trigger the prediction
+if st.button('Get Predicted Selling Price'):
+    # Apply the scaler to the input data
+    input_data_scaled = scaler.transform(input_data_encoded)
+
+    # Make prediction
+    prediction = model.predict(input_data_scaled)
+
+    # Show the prediction
+    st.write(f"Predicted Selling Price: ₹{prediction[0]:,.2f}")
